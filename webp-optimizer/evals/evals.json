@@ -1,0 +1,44 @@
+{
+  "skill_name": "webp-optimizer",
+  "evals": [
+    {
+      "id": 0,
+      "name": "single-image-convert",
+      "prompt": "This hero image is way too heavy and slowing down my landing page. Can you optimize it for the web? It's at ./hero.png",
+      "expected_output": "hero.webp created next to hero.png, original PNG still present (not deleted), and the size savings (~70%+) reported back to the user.",
+      "files": ["fixtures/hero.png"],
+      "assertions": [
+        { "text": "A hero.webp file was created", "check": "hero.webp exists in the working dir" },
+        { "text": "The original hero.png was kept, not deleted", "check": "hero.png still exists" },
+        { "text": "The .webp is meaningfully smaller than the .png (>50% reduction)", "check": "size(hero.webp) < 0.5 * size(hero.png)" },
+        { "text": "The size savings were reported to the user", "check": "final message mentions a KB/MB size or a percentage reduction" }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "batch-folder-convert",
+      "prompt": "I've got a folder of client photos in ./photos that need to be shrunk down before we ship the site. Convert them all to webp please.",
+      "expected_output": "Every .png/.jpg in ./photos converted to .webp siblings, originals kept, a per-file and/or total savings summary reported.",
+      "files": ["fixtures/hero.png", "fixtures/team-photo.png", "fixtures/banner.jpg"],
+      "assertions": [
+        { "text": "All three images were converted to .webp", "check": "hero.webp, team-photo.webp, banner.webp all exist in photos/" },
+        { "text": "All three originals were kept", "check": "hero.png, team-photo.png, banner.jpg still exist" },
+        { "text": "Each .webp is smaller than its source", "check": "for each pair, webp size < source size" },
+        { "text": "A savings summary was reported", "check": "final message reports per-file or total size reduction" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "web-project-with-refs",
+      "prompt": "My Vue site's images are killing my Lighthouse score. Optimize the images in public/img and update the code so nothing breaks. The images are referenced in src/App.vue.",
+      "expected_output": "public/img images converted to .webp; App.vue references updated from .png/.jpg to .webp with no broken references left; if sharp was installed it was removed with --no-save leaving package.json clean.",
+      "files": ["fixtures/siteproj"],
+      "assertions": [
+        { "text": "The images in public/img were converted to .webp", "check": "hero.webp, team.webp, banner.webp exist in public/img/" },
+        { "text": "App.vue references were updated to .webp", "check": "src/App.vue contains /img/hero.webp, /img/banner.webp, /img/team.webp" },
+        { "text": "No stale .png/.jpg references remain in App.vue", "check": "grep for /img/*.png or /img/*.jpg in App.vue finds nothing" },
+        { "text": "package.json was left clean (sharp not added as a dependency)", "check": "package.json has no sharp entry in dependencies/devDependencies" }
+      ]
+    }
+  ]
+}

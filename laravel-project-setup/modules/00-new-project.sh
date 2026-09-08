@@ -21,9 +21,11 @@ fi
 
 # The official installer gives the current starter skeleton; composer's
 # create-project is the fallback when it isn't installed.
+# --pest asks the installer for a Pest-based skeleton, so a new app never needs
+# the PHPUnit-to-Pest conversion the pest-drift step exists for.
 if command -v laravel >/dev/null 2>&1; then
     info "using the laravel installer"
-    run laravel new "$NEW_PROJECT_NAME" --no-interaction
+    run laravel new "$NEW_PROJECT_NAME" --pest --no-interaction
 else
     info "laravel installer not found — falling back to composer create-project"
     run composer create-project laravel/laravel "$NEW_PROJECT_NAME" --no-interaction

@@ -8,8 +8,9 @@
 
 merge_composer_scripts "$(asset composer-scripts.json)"
 
-# The coverage scripts drive Pest. Say so early rather than letting the user
-# discover it the first time they run `composer coverage` on a PHPUnit project.
+# The coverage scripts drive Pest. The pest step normally puts it there; say
+# something only when that step was skipped, rather than letting the user find
+# out the first time they run `composer coverage`.
 if [[ ${DRY_RUN:-0} != 1 && ! -x vendor/bin/pest ]]; then
-    warn "vendor/bin/pest not present — the coverage scripts need Pest (composer require --dev pestphp/pest)"
+    warn "vendor/bin/pest not present — the coverage scripts need it (rerun with --only pest)"
 fi

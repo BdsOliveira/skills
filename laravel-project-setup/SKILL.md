@@ -4,8 +4,9 @@ description: >-
   Bootstrap and standardize a Laravel project with a fixed house toolchain:
   Larastan/PHPStan (level 10), Laravel Pint (psr12 + custom rules), Debugbar,
   Laravel Boost (AI guidelines, agent skills, MCP server), Laravel Sail (Docker
-  stack with mysql/redis/mailpit/minio), the composer scripts
-  stan/pint/coverage/coverage-html/quality, and optional pt_BR translations. Use this whenever the user starts a
+  stack with mysql/redis/mailpit/minio), Pest as the test runner, the composer
+  scripts stan/pint/coverage/coverage-html/quality, and optional pt_BR
+  translations. Use this whenever the user starts a
   new Laravel/PHP project, says "setup", "configura o projeto", "bootstrap",
   "scaffold", or asks to add static analysis, code style, linting, coverage
   thresholds, quality scripts, or a Docker/Sail dev environment to a Laravel app — even if they never mention
@@ -79,6 +80,8 @@ in — don't run the setup and offer to add Portuguese afterwards.
 | 10 | `dev-deps` | on | Installs the packages listed in `assets/dev-packages.txt` |
 | 20 | `phpstan` | on | Writes `phpstan.neon` from `assets/phpstan.neon` |
 | 30 | `pint` | on | Writes `pint.json` from `assets/pint.json` |
+| 35 | `pest` | on | Installs Pest and initialises `tests/Pest.php` |
+| 36 | `pest-drift` | asks | Rewrites existing PHPUnit test classes into Pest syntax |
 | 40 | `composer-scripts` | on | Merges `assets/composer-scripts.json` into `composer.json` |
 | 50 | `ptbr` | asks | pt_BR translations + `APP_LOCALE` / `APP_FAKER_LOCALE` = `pt_BR` |
 | 60 | `boost` | on | Publishes Laravel Boost guidelines, skills and MCP config |
@@ -102,10 +105,23 @@ the modules directory is the real source of truth.
 - **`phpstan.neon` is the only place the level is set.** The `stan` composer
   script deliberately passes no `--level`, so editing `assets/phpstan.neon`
   actually changes how strict the analysis is.
-- **The coverage scripts need Pest** and a 90% minimum. The `composer-scripts`
-  step warns when `vendor/bin/pest` is missing.
+- **Coverage needs a driver, not just Pest.** The scripts ask for a 90% minimum,
+  which requires pcov or xdebug in whichever PHP runs them. Sail's image ships
+  pcov; a bare host PHP frequently has neither, and Pest's own error ("No code
+  coverage driver is available") does not say which PHP it means — so the `pest`
+  step checks and warns up front.
 - **pt_BR translations are vendored, not depended on.** The localization package
   is installed, published into `lang/`, then removed.
+- **Pest is the test runner, and new apps are created with it.** `--new` passes
+  `--pest` to the installer, so a fresh app is born on Pest. On an existing
+  PHPUnit project the `pest` step installs Pest and drops the direct
+  `phpunit/phpunit` requirement — Pest runs on PHPUnit, so it comes back as a
+  dependency and every existing assertion keeps working.
+- **Converting test files is a separate question.** Installing Pest does not
+  rewrite anything: PHPUnit classes and Pest closures run side by side. The
+  `pest-drift` step does the rewrite, and it asks first, because it edits code
+  the user wrote. Worth offering even on a brand-new app — `laravel new --pest`
+  installs Pest but still ships PHPUnit-style example tests.
 - **Sail is installed but never started.** The step writes `compose.yaml` and
   repoints the `.env` service variables at the containers; `sail up -d` pulls
   images and holds ports, so it stays the user's call. Tell them the command.

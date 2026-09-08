@@ -8,7 +8,7 @@ instalável em qualquer máquina via [`npx skills`](https://github.com/vercel-la
 | Skill | O que faz |
 | --- | --- |
 | [`webp-optimizer`](./webp-optimizer) | Converte imagens (`.png`/`.jpg`/`.jpeg`/`.tiff`) para **WebP** (ou AVIF) e reduz o peso das páginas em ~70–98%. Recebe um arquivo, uma lista ou uma pasta inteira. |
-| [`laravel-project-setup`](./laravel-project-setup) | Aplica o toolchain padrão em um projeto Laravel (Larastan nível 10, Pint, Debugbar, Boost, Sail, scripts `stan`/`pint`/`coverage`/`quality`, pt_BR opcional). Cria o projeto do zero se precisar. |
+| [`laravel-project-setup`](./laravel-project-setup) | Aplica o toolchain padrão em um projeto Laravel (Larastan nível 10, Pint, Debugbar, Boost, Sail, Pest, scripts `stan`/`pint`/`coverage`/`quality`, pt_BR opcional). Cria o projeto do zero se precisar. |
 
 ---
 
@@ -66,6 +66,7 @@ laravel-project-setup/setup.sh --list                 # mostra os passos existen
 laravel-project-setup/setup.sh                        # configura o projeto da pasta atual
 laravel-project-setup/setup.sh --new minha-app        # cria um Laravel novo e já configura
 laravel-project-setup/setup.sh --with ptbr            # inclui traduções pt_BR
+laravel-project-setup/setup.sh --with pest-drift     # converte os testes PHPUnit para Pest
 laravel-project-setup/setup.sh --without boost        # pula um passo
 laravel-project-setup/setup.sh --only phpstan,pint    # roda só esses
 laravel-project-setup/setup.sh --dry-run              # mostra tudo sem escrever nada

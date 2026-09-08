@@ -8,7 +8,7 @@ instalável em qualquer máquina via [`npx skills`](https://github.com/vercel-la
 | Skill | O que faz |
 | --- | --- |
 | [`webp-optimizer`](./webp-optimizer) | Converte imagens (`.png`/`.jpg`/`.jpeg`/`.tiff`) para **WebP** (ou AVIF) e reduz o peso das páginas em ~70–98%. Recebe um arquivo, uma lista ou uma pasta inteira. |
-| [`laravel-project-setup`](./laravel-project-setup) | Aplica o toolchain padrão em um projeto Laravel (Larastan nível 10, Pint, Debugbar, scripts `stan`/`pint`/`coverage`/`quality`, pt_BR opcional). Cria o projeto do zero se precisar. |
+| [`laravel-project-setup`](./laravel-project-setup) | Aplica o toolchain padrão em um projeto Laravel (Larastan nível 10, Pint, Debugbar, Boost, Sail, scripts `stan`/`pint`/`coverage`/`quality`, pt_BR opcional). Cria o projeto do zero se precisar. |
 
 ---
 
@@ -81,6 +81,7 @@ que já existe e está diferente vira `.bak` antes de ser trocada, e os scripts 
 | --- | --- |
 | Trocar nível do PHPStan, regra do Pint, threshold de coverage | o arquivo correspondente em `assets/` |
 | Adicionar/remover um pacote de dev | `assets/dev-packages.txt`, uma linha por pacote |
+| Trocar os containers do Sail | `assets/sail-services.txt`, um serviço por linha |
 | Adicionar um passo novo | copiar `modules/TEMPLATE.sh.example` para `modules/NN-nome.sh` |
 | Remover um passo | apagar o arquivo, ou pôr `# default: off` no header dele |
 | Fazer um passo virar pergunta por projeto | pôr uma linha `# ask:` no header (é assim que o `ptbr` funciona) |

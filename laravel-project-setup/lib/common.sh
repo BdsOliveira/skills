@@ -90,18 +90,25 @@ merge_composer_scripts() {
         return 0
     fi
 
+    # $PHP_CMD may be Sail, which runs inside a container where only the project
+    # directory is mounted — a path under the skill directory simply does not
+    # exist there, and the merge would quietly do nothing. Staging the file in
+    # the project makes the path valid whichever PHP ends up running.
+    local staged='.laravel-project-setup.scripts.json' status=0
+    cp "$scripts_file" "$staged"
+
     $PHP_CMD -r '
         $target  = "composer.json";
         $incoming = $argv[1];
 
         $json = json_decode(file_get_contents($target), true);
         if (!is_array($json)) {
-            fwrite(STDERR, "error: composer.json is not valid JSON\n");
+            fwrite(STDERR, "composer.json is not valid JSON\n");
             exit(1);
         }
         $scripts = json_decode(file_get_contents($incoming), true);
         if (!is_array($scripts)) {
-            fwrite(STDERR, "error: {$incoming} is not valid JSON\n");
+            fwrite(STDERR, "{$incoming} is not valid JSON\n");
             exit(1);
         }
 
@@ -114,8 +121,15 @@ merge_composer_scripts() {
             $target,
             json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n"
         );
-        echo "   composer.json scripts: " . implode(", ", array_keys($scripts)) . "\n";
-    ' "$scripts_file"
+    ' "$staged" || status=$?
+
+    rm -f "$staged"
+    [[ $status -eq 0 ]] || die "could not merge the composer scripts (php exited $status)"
+
+    # Reported from bash rather than from inside the PHP snippet: when the run
+    # goes through Sail, output from the container is not something to rely on
+    # for knowing whether the step actually did anything.
+    info "composer.json scripts: $(grep -oE '"[a-z-]+":' "$scripts_file" | tr -d '":' | tr '\n' ' ')"
 }
 
 # --- gitignore -------------------------------------------------------------

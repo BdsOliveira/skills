@@ -3,11 +3,12 @@ name: laravel-project-setup
 description: >-
   Bootstrap and standardize a Laravel project with a fixed house toolchain:
   Larastan/PHPStan (level 10), Laravel Pint (psr12 + custom rules), Debugbar,
-  Laravel Boost (AI guidelines, agent skills, MCP server), the composer scripts
+  Laravel Boost (AI guidelines, agent skills, MCP server), Laravel Sail (Docker
+  stack with mysql/redis/mailpit/minio), the composer scripts
   stan/pint/coverage/coverage-html/quality, and optional pt_BR translations. Use this whenever the user starts a
   new Laravel/PHP project, says "setup", "configura o projeto", "bootstrap",
   "scaffold", or asks to add static analysis, code style, linting, coverage
-  thresholds, or quality scripts to a Laravel app — even if they never mention
+  thresholds, quality scripts, or a Docker/Sail dev environment to a Laravel app — even if they never mention
   PHPStan or Pint by name. Also use when they want the project in Portuguese
   (pt_BR locale/translations), when they ask to redo the setup on an existing
   project, or when they want to change, add, or remove one of these setup steps.
@@ -81,6 +82,7 @@ in — don't run the setup and offer to add Portuguese afterwards.
 | 40 | `composer-scripts` | on | Merges `assets/composer-scripts.json` into `composer.json` |
 | 50 | `ptbr` | asks | pt_BR translations + `APP_LOCALE` / `APP_FAKER_LOCALE` = `pt_BR` |
 | 60 | `boost` | on | Publishes Laravel Boost guidelines, skills and MCP config |
+| 70 | `sail` | on | Installs Sail and writes the Compose file from `assets/sail-services.txt` |
 
 Run `--list` rather than trusting this table if the skill has been extended —
 the modules directory is the real source of truth.
@@ -104,6 +106,17 @@ the modules directory is the real source of truth.
   step warns when `vendor/bin/pest` is missing.
 - **pt_BR translations are vendored, not depended on.** The localization package
   is installed, published into `lang/`, then removed.
+- **Sail is installed but never started.** The step writes `compose.yaml` and
+  repoints the `.env` service variables at the containers; `sail up -d` pulls
+  images and holds ports, so it stays the user's call. Tell them the command.
+- **A database service moves the project off sqlite.** `sail:install --with=mysql`
+  rewrites `DB_CONNECTION` and `DB_*` in `.env`, so a fresh Laravel app that was
+  on sqlite now needs `sail artisan migrate` against the container. Say so
+  rather than letting them find out when a query fails.
+- **Anything handed to `$PHP_CMD` must live inside the project.** When the run
+  goes through Sail, PHP executes in a container that mounts only the project
+  directory — a path under the skill directory does not exist there. Stage the
+  file in the project first (`merge_composer_scripts` shows the pattern).
 - **Boost is published, not just installed.** The step runs `boost:install`
   (guidelines + skills + MCP) rather than `boost:update`, because a
   non-interactive install does not write the agent list that `boost:update`
@@ -119,7 +132,7 @@ This is the part to reach for when the user says "add X to my setup" or
 a composer script): edit the matching file in `assets/`. No shell code involved.
 
 **Add or remove a dev package**: edit `assets/dev-packages.txt`, one package per
-line.
+line. Sail's containers are the same idea in `assets/sail-services.txt`.
 
 **Add a whole new step**: copy `modules/TEMPLATE.sh.example` to
 `modules/NN-name.sh`, where `NN` orders it against the existing steps. It is

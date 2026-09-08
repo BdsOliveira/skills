@@ -1,0 +1,16 @@
+# Containers the sail module puts in the Compose file.
+# One service per line. Blank lines and # comments are ignored.
+# Add or remove a line here — no shell code to touch.
+#
+# Valid names (laravel/sail 1.x):
+#   mysql  pgsql  mariadb  mongodb  redis  valkey  memcached  meilisearch
+#   typesense  minio  rustfs  mailpit  rabbitmq  selenium  soketi
+#
+# Note that a database service rewrites DB_CONNECTION and the DB_* host in
+# .env — a fresh Laravel 13 app ships on sqlite, and picking mysql here moves
+# it to the container.
+
+mysql
+redis
+mailpit
+minio

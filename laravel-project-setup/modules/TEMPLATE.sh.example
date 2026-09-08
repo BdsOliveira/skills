@@ -23,6 +23,13 @@
 #   artisan_has <command>        true when artisan exposes that command
 #   set_state PROJECT_DIR <p>    tell the runner the project moved
 #
+# One trap worth knowing: when the run goes through Sail, $PHP_CMD and
+# $ARTISAN_CMD execute inside a container that mounts only the project
+# directory. A path under $SKILL_DIR does not exist there, so a skill asset has
+# to be staged in the project before being handed to them — see
+# merge_composer_scripts in lib/common.sh. Host-side helpers (cp, bash reads,
+# install_asset) are unaffected.
+#
 # Keep the module idempotent: it should be safe to run twice on the same
 # project. Failing modules do not abort the run — the runner reports them at
 # the end — so it is fine to `die` when a precondition is genuinely missing.

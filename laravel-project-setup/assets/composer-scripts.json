@@ -1,0 +1,21 @@
+{
+    "stan": [
+        "vendor/bin/phpstan analyse --memory-limit=2G --configuration=phpstan.neon"
+    ],
+    "pint": [
+        "vendor/bin/pint --config=pint.json --verbose"
+    ],
+    "coverage": [
+        "Composer\\Config::disableProcessTimeout",
+        "XDEBUG_MODE=off vendor/bin/pest -d pcov.enabled=1 --coverage --min=90"
+    ],
+    "coverage-html": [
+        "Composer\\Config::disableProcessTimeout",
+        "XDEBUG_MODE=off vendor/bin/pest -d pcov.enabled=1 --coverage --min=90 --coverage-html=storage/coverage"
+    ],
+    "quality": [
+        "@composer pint",
+        "@composer stan",
+        "@composer test"
+    ]
+}

@@ -1,0 +1,31 @@
+# name: my-step
+# desc: One line describing what this step does (shown by --list)
+# default: on
+# ask: Optional question — add this line only when the step is a real
+#      per-project choice that must never be decided silently.
+#
+# Copy this file to modules/NN-my-step.sh (NN = two digits deciding run order)
+# and it is picked up automatically — nothing else needs registering.
+#
+# The module runs with the project root as the working directory and with these
+# already available (see lib/common.sh):
+#
+#   PROJECT_DIR  absolute project root
+#   SKILL_DIR    this skill's directory
+#   COMPOSER_CMD / ARTISAN_CMD / PHP_CMD    Sail-aware tool runners — always call them as
+#                               `run $COMPOSER_CMD ...`, never bare `composer`
+#   run <cmd>            execute, or just print under --dry-run
+#   step / info / warn / die     output helpers
+#   asset <file>                 path to a file in assets/
+#   install_asset <src> <dest>   copy a config file in, backing up a differing one
+#   set_env_var <file> <K> <V>   set a key in .env / .env.example
+#   merge_composer_scripts <f>   merge a JSON script map into composer.json
+#   artisan_has <command>        true when artisan exposes that command
+#   set_state PROJECT_DIR <p>    tell the runner the project moved
+#
+# Keep the module idempotent: it should be safe to run twice on the same
+# project. Failing modules do not abort the run — the runner reports them at
+# the end — so it is fine to `die` when a precondition is genuinely missing.
+
+info "doing the thing..."
+run $COMPOSER_CMD require --dev --no-interaction some/package

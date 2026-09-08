@@ -1,0 +1,12 @@
+# Dev dependencies installed by the dev-deps module.
+# One composer package per line. Blank lines and # comments are ignored.
+# Add or remove a line here — no shell code to touch.
+
+fruitcake/laravel-debugbar
+larastan/larastan
+laravel/pint
+
+# Boost ships AI guidelines, agent skills and an MCP server for the packages the
+# project actually uses. Installing the package is all this file does; the
+# `boost` module handles publishing its resources.
+laravel/boost

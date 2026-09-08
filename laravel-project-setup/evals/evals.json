@@ -1,0 +1,68 @@
+{
+    "skill_name": "laravel-project-setup",
+    "evals": [
+        {
+            "id": 0,
+            "name": "configure-existing",
+            "prompt": "tenho um projeto laravel aqui em ./meu-projeto que acabei de criar, ainda tá cru. aplica o setup padrão nele: análise estática, code style, os scripts de qualidade, tudo. é um projeto interno, em inglês mesmo.",
+            "expected_output": "phpstan.neon + pint.json written, dev deps installed, composer scripts stan/pint/coverage/coverage-html/quality merged into composer.json without losing the existing ones, pt_BR NOT applied (user said English), composer stan and composer pint both run clean.",
+            "files": [
+                "meu-projeto/"
+            ],
+            "assertions": [
+                "phpstan.neon exists in the project",
+                "pint.json exists in the project",
+                "composer scripts stan/pint/coverage/coverage-html/quality all present",
+                "Laravel's pre-existing composer scripts survived the merge",
+                "laravel/framework still installed (project not broken)",
+                "composer stan runs clean on the configured project",
+                "pt_BR was NOT applied (user asked for English / did not ask for it)"
+            ]
+        },
+        {
+            "id": 1,
+            "name": "new-project-ptbr",
+            "prompt": "cria um projeto laravel novo chamado catalogo nessa pasta e já deixa ele com todo o meu setup padrão. é pra um cliente brasileiro, o sistema vai ser todo em português.",
+            "expected_output": "New Laravel app at ./catalogo with the full toolchain applied AND pt_BR: lang/pt_BR published, APP_LOCALE=pt_BR in .env and .env.example, the localization package removed from composer.json, laravel/framework intact, composer stan passes.",
+            "files": [],
+            "assertions": [
+                "phpstan.neon exists in the project",
+                "pint.json exists in the project",
+                "composer scripts stan/pint/coverage/coverage-html/quality all present",
+                "Laravel's pre-existing composer scripts survived the merge",
+                "laravel/framework still installed (project not broken)",
+                "composer stan runs clean on the configured project",
+                "project directory named \"catalogo\" was created",
+                "APP_LOCALE=pt_BR set in .env",
+                "APP_LOCALE=pt_BR set in .env.example",
+                "pt_BR translations published under lang/",
+                "localization package removed from composer.json after publishing"
+            ]
+        },
+        {
+            "id": 2,
+            "name": "extend-skill",
+            "prompt": "quero mudar meu setup padrão de laravel: adiciona o pest nas dependências de dev e tira o debugbar, e cria um passo novo que instala e configura o laravel/sail. depois aplica o setup atualizado no ./meu-projeto.",
+            "expected_output": "The SKILL's own config is edited (assets/dev-packages.txt gains pestphp/pest, loses fruitcake/laravel-debugbar) and a new module file is added under modules/ following the template contract — not a one-off hand edit of the project. Then the updated setup runs on ./meu-projeto.",
+            "files": [
+                "meu-projeto/"
+            ],
+            "assertions": [
+                "phpstan.neon exists in the project",
+                "pint.json exists in the project",
+                "composer scripts stan/pint/coverage/coverage-html/quality all present",
+                "Laravel's pre-existing composer scripts survived the merge",
+                "laravel/framework still installed (project not broken)",
+                "composer stan runs clean on the configured project",
+                "pt_BR was NOT applied (user asked for English / did not ask for it)",
+                "skill asset dev-packages.txt gained pest",
+                "skill asset dev-packages.txt no longer lists debugbar",
+                "a new module file for Sail was added under modules/",
+                "the new module declares the name/desc headers the runner reads",
+                "pest installed in the project",
+                "debugbar not installed in the project",
+                "sail installed in the project"
+            ]
+        }
+    ]
+}

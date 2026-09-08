@@ -8,6 +8,7 @@ instalável em qualquer máquina via [`npx skills`](https://github.com/vercel-la
 | Skill | O que faz |
 | --- | --- |
 | [`webp-optimizer`](./webp-optimizer) | Converte imagens (`.png`/`.jpg`/`.jpeg`/`.tiff`) para **WebP** (ou AVIF) e reduz o peso das páginas em ~70–98%. Recebe um arquivo, uma lista ou uma pasta inteira. |
+| [`laravel-project-setup`](./laravel-project-setup) | Aplica o toolchain padrão em um projeto Laravel (Larastan nível 10, Pint, Debugbar, scripts `stan`/`pint`/`coverage`/`quality`, pt_BR opcional). Cria o projeto do zero se precisar. |
 
 ---
 
@@ -45,6 +46,47 @@ npx skills list --global                      # mostra o que já está instalado
 npx skills update webp-optimizer              # atualiza para a última versão
 npx skills remove webp-optimizer              # remove
 ```
+
+---
+
+## `laravel-project-setup`
+
+Cada passo do setup é um arquivo separado em `modules/` e cada arquivo de
+configuração é um arquivo separado em `assets/` — a ideia é dar pra **acrescentar
+ou tirar coisa sem reescrever script nenhum**.
+
+```bash
+npx skills add BdsOliveira/skills --skill laravel-project-setup --global
+```
+
+Uso direto, sem agente:
+
+```bash
+laravel-project-setup/setup.sh --list                 # mostra os passos existentes
+laravel-project-setup/setup.sh                        # configura o projeto da pasta atual
+laravel-project-setup/setup.sh --new minha-app        # cria um Laravel novo e já configura
+laravel-project-setup/setup.sh --with ptbr            # inclui traduções pt_BR
+laravel-project-setup/setup.sh --without boost        # pula um passo
+laravel-project-setup/setup.sh --only phpstan,pint    # roda só esses
+laravel-project-setup/setup.sh --dry-run              # mostra tudo sem escrever nada
+```
+
+Detecta o Laravel Sail sozinho e pode ser rodado de novo com segurança: config
+que já existe e está diferente vira `.bak` antes de ser trocada, e os scripts do
+`composer.json` são mesclados (os do projeto não se perdem).
+
+### Como mudar o setup
+
+| Quero… | Mexo em… |
+| --- | --- |
+| Trocar nível do PHPStan, regra do Pint, threshold de coverage | o arquivo correspondente em `assets/` |
+| Adicionar/remover um pacote de dev | `assets/dev-packages.txt`, uma linha por pacote |
+| Adicionar um passo novo | copiar `modules/TEMPLATE.sh.example` para `modules/NN-nome.sh` |
+| Remover um passo | apagar o arquivo, ou pôr `# default: off` no header dele |
+| Fazer um passo virar pergunta por projeto | pôr uma linha `# ask:` no header (é assim que o `ptbr` funciona) |
+
+Requisitos: PHP e Composer. O passo `--new` usa o instalador `laravel` quando
+existe e cai para `composer create-project` quando não.
 
 ---
 

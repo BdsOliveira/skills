@@ -1,0 +1,28 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/nesbot/carbon/extension.neon
+
+parameters:
+
+    paths:
+        - app/
+
+    # Level 10 is the highest level
+    level: 10
+
+    # The ignore rules below are written for projects that have Livewire. On a
+    # project that doesn't, an unmatched ignore pattern is itself reported as an
+    # error, which would make `composer stan` fail on a brand-new app. Turning
+    # the report off keeps the same ruleset usable everywhere.
+    reportUnmatchedIgnoredErrors: false
+
+    # These traits are consumed exclusively by Livewire v4 single-file
+    # components under resources/views, which PHPStan does not scan, so it
+    # cannot see the `use` statements and reports them as unused.
+    ignoreErrors:
+        -
+            identifier: trait.unused
+            path: app/Livewire/Concerns/*.php
+
+#    excludePaths:
+#        - ./*/*/FileToBeExcluded.php

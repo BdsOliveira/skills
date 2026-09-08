@@ -1,0 +1,23 @@
+{
+    "preset": "psr12",
+    "rules": {
+        "simplified_null_return": true,
+        "array_indentation": true,
+        "binary_operator_spaces": {
+            "operators": {
+                "=>": "align_single_space_minimal",
+                "=": "align_single_space_minimal"
+            }
+        },
+        "new_with_parentheses": {
+            "anonymous_class": true,
+            "named_class": true
+        },
+        "no_unused_imports": true,
+        "ordered_imports": {
+            "sort_algorithm": "alpha"
+        },
+        "single_quote": true,
+        "declare_strict_types": true
+    }
+}

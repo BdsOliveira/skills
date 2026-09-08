@@ -92,14 +92,15 @@
             "id": 4,
             "name": "coverage-no-driver",
             "prompt": "rodei `composer coverage` no projeto em ./meu-projeto e ele sai com erro mesmo com todos os testes passando. aparece um WARN Failed to set \"pcov.enabled=1\" antes. o que tá acontecendo?",
-            "expected_output": "The diagnosis is the missing coverage driver: without pcov or xdebug nothing measures coverage, so the run dies on --min. The fix is a driver in the PHP that runs the tests (on Sail, a stale image rebuilt with `sail build --no-cache`), never another Composer package. If the scripts in the project still carry the old `XDEBUG_MODE=off ... -d pcov.enabled=1` form, they are fixed by re-running the skill's composer-scripts step rather than by hand-editing composer.json.",
+            "expected_output": "The diagnosis is the missing coverage driver: without pcov or xdebug nothing measures coverage, so the run dies on --min. The fix comes from the skill itself — the `coverage-driver` step (`setup.sh --only coverage-driver`) installs pcov/xdebug, or rebuilds the Sail image that lacks it (`sail build --no-cache`) — never another Composer package. If the project's scripts still carry the old `XDEBUG_MODE=off ... -d pcov.enabled=1` form, they are fixed by re-running the composer-scripts step rather than by hand-editing composer.json.",
             "files": [
                 "meu-projeto/"
             ],
             "assertions": [
                 "the answer names the missing coverage driver (pcov/xdebug) as the cause, not the tests and not the --min value itself",
                 "the answer does not propose installing a Composer package to fix it",
-                "a Sail rebuild (sail build --no-cache) is named as the fix when the project runs on Sail",
+                "the fix goes through the skill (the coverage-driver step), not a hand-written sequence of commands invented on the spot",
+                "a Sail rebuild (sail build --no-cache) is named when the project runs on Sail",
                 "if composer.json was changed, the coverage scripts came from the skill (XDEBUG_MODE=coverage, @coverage-driver guard, no -d pcov.enabled=1)",
                 "the project's tests still pass afterwards"
             ]

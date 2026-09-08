@@ -42,13 +42,9 @@ else
 fi
 
 # The coverage scripts need a coverage driver in the PHP that runs them: pcov
-# or xdebug. Sail's image ships pcov, but an image built before that was true is
-# still around on plenty of machines, so "Sail is up" is not the same as "there
-# is a driver" — check the PHP that will actually run the tests.
-#
-# `composer coverage` refuses to run without one and says so; this warns at
-# setup time instead of at the first test run.
+# or xdebug. The `coverage-driver` step installs one — it runs later (after
+# `sail`, because on a Sail project the driver lives in the image), so this only
+# says what is missing rather than fixing it here.
 if [[ ${DRY_RUN:-0} != 1 ]] && ! $PHP_CMD -m 2>/dev/null | grep -qiE '^(pcov|xdebug)$'; then
-    warn "no pcov/xdebug in this PHP — 'composer coverage' cannot measure coverage until one is installed"
-    warn "on Sail, that usually means a stale image: vendor/bin/sail build --no-cache"
+    info "no pcov/xdebug in this PHP yet — the coverage-driver step handles that"
 fi

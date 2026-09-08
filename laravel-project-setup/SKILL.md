@@ -109,6 +109,32 @@ else. Everything besides the path has a default, overridden the same way:
 Then tell the user to configure the repository: variables `FTP_HOST`, `FTP_USER`
 (optionally `SSH_HOST`, `SSH_PORT`) and the secret `FTP_PASSWORD`.
 
+## The coverage driver is installed, not just checked
+
+The `coverage-driver` step (75) makes `composer coverage` able to measure
+something. Where the extension has to go depends on how the project runs PHP,
+so the step looks first and acts accordingly:
+
+| Project | What it does |
+| --- | --- |
+| Sail, image already built | Probes `sail-<ver>/app` for pcov/xdebug; rebuilds it with `sail build --no-cache` when neither is there (the image predates pcov landing in Sail's runtimes) |
+| Sail, image not built yet | Nothing — the first `sail up -d` builds it from the current Dockerfile, which ships pcov |
+| Host PHP | Installs the extension with the system package manager (`apt-get`/`dnf`/`apk`) or `pecl`, and enables it in `php.ini` if the package did not |
+
+Installing on a host PHP needs root: the step uses `sudo` when it can do so
+non-interactively, and otherwise prints the exact command to run. It never
+writes `extension=` for a library that was not actually built — a dangling
+`extension=` line turns every later `php` call into a warning.
+
+| Variable | Effect |
+| --- | --- |
+| `COVERAGE_DRIVER` | `pcov` (default), `xdebug`, or `skip` to leave it alone |
+| `COVERAGE_DRIVER_REBUILD=0` | Never rebuild the Sail image; report the command instead |
+
+The rebuild takes several minutes, so a run that is expected to be quick should
+pass `COVERAGE_DRIVER_REBUILD=0` (or `--without coverage-driver`) and tell the
+user what to run later.
+
 ## What each step does
 
 | # | Name | Default | What it does |
@@ -123,6 +149,7 @@ Then tell the user to configure the repository: variables `FTP_HOST`, `FTP_USER`
 | 50 | `ptbr` | asks | pt_BR translations + `APP_LOCALE` / `APP_FAKER_LOCALE` = `pt_BR` |
 | 60 | `boost` | on | Publishes Laravel Boost guidelines, skills and MCP config |
 | 70 | `sail` | on | Installs Sail and writes the Compose file from `assets/sail-services.txt` |
+| 75 | `coverage-driver` | on | Installs pcov/xdebug (or rebuilds a Sail image that lacks it) so `composer coverage` can measure |
 | 80 | `deploy` | asks | Writes `.github/workflows/deploy.yml` (FTP sync + SSH post-deploy) |
 
 Run `--list` rather than trusting this table if the skill has been extended —
@@ -143,19 +170,21 @@ the modules directory is the real source of truth.
 - **`phpstan.neon` is the only place the level is set.** The `stan` composer
   script deliberately passes no `--level`, so editing `assets/phpstan.neon`
   actually changes how strict the analysis is.
-- **Coverage needs a driver, not just Pest.** `composer coverage` runs
-  `XDEBUG_MODE=coverage vendor/bin/pest --coverage`, which needs pcov or xdebug
-  in whichever PHP runs it — with pcov present php-code-coverage picks pcov and
-  ignores the variable, without it xdebug takes over. Both scripts start with a
-  `coverage-driver` check that fails with a readable message when neither is
-  loaded, because the failure it replaces was a silent one: no driver means 0%
-  measured, and the run died on `--min` instead of on the missing extension. The
-  `pest` step warns about the same thing at setup time.
+- **Coverage needs a driver, not just Pest — and the setup installs one.**
+  `composer coverage` runs `XDEBUG_MODE=coverage vendor/bin/pest --coverage`,
+  which needs pcov or xdebug in whichever PHP runs it: with pcov present
+  php-code-coverage picks pcov and ignores the variable, without it xdebug takes
+  over. The `coverage-driver` step puts one there — see the section below for
+  what it does on Sail versus on a host PHP. Both coverage scripts also start
+  with a `coverage-driver` guard that fails with a readable message when neither
+  extension is loaded, because the failure it replaces was a silent one: no
+  driver means 0% measured, and the run died on `--min` instead of on the
+  missing extension.
 - **`WARN Failed to set "pcov.enabled=1"` means the extension is missing.** It
   is what the old `-d pcov.enabled=1` printed, and the fix is a driver in that
-  PHP, never another Composer package. Sail's image ships pcov, so an image
-  built before that was true is the usual culprit: `vendor/bin/sail build
-  --no-cache`, then `vendor/bin/sail up -d`.
+  PHP, never another Composer package. On Sail that is a stale image:
+  `<skill>/setup.sh --only coverage-driver` rebuilds it, or by hand
+  `vendor/bin/sail build --no-cache` then `vendor/bin/sail up -d`.
 - **The coverage threshold is a per-project number.** The scripts are written
   with `--min=90`, the house standard; pass `COVERAGE_MIN=<n>` to the setup to
   bake in a different one. A freshly scaffolded app has `app/` code and no tests

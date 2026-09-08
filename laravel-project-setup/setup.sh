@@ -186,13 +186,25 @@ for f in "${SELECTED[@]}"; do
     [[ $(mod_name "$f") == new-project ]] && creating_project=1
 done
 
+# Sail is only usable when its containers are actually up. Testing for the
+# binary alone is not enough: a project can have Sail installed with everything
+# stopped — including right after a step that installs it — and routing every
+# composer/artisan call into a dead container fails the whole run.
+sail_is_running() {
+    [[ -x $PROJECT_DIR/vendor/bin/sail ]] || return 1
+    command -v docker >/dev/null 2>&1 || return 1
+    [[ -n "$(cd "$PROJECT_DIR" && docker compose ps --status running -q 2>/dev/null)" ]]
+}
+
 detect_runners() {
-    if [[ -x $PROJECT_DIR/vendor/bin/sail ]]; then
-        info "Laravel Sail detected — routing composer/artisan/php through Sail."
+    if sail_is_running; then
+        info "Laravel Sail is up — routing composer/artisan/php through Sail."
         COMPOSER_CMD="$PROJECT_DIR/vendor/bin/sail composer"
         ARTISAN_CMD="$PROJECT_DIR/vendor/bin/sail artisan"
         PHP_CMD="$PROJECT_DIR/vendor/bin/sail php"
     else
+        [[ -x $PROJECT_DIR/vendor/bin/sail ]] \
+            && info "Sail is installed but no containers are running — using local composer/php."
         COMPOSER_CMD="composer"
         ARTISAN_CMD="php artisan"
         PHP_CMD="php"

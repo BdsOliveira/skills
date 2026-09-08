@@ -87,8 +87,11 @@ the modules directory is the real source of truth.
 
 ## Behaviour worth knowing
 
-- **Sail-aware.** If `vendor/bin/sail` exists, composer/artisan/php are routed
-  through Sail automatically. Sail containers must be up for that to work.
+- **Sail-aware, but only when Sail is actually up.** composer/artisan/php are
+  routed through Sail when its containers are running, and fall back to the
+  local binaries when they are not. Checking for `vendor/bin/sail` alone would
+  send every command into a stopped container — which is exactly what happens on
+  a project that has Sail installed but not started.
 - **Safe to re-run.** A config file that already exists and differs is copied to
   `<file>.bak` before being replaced, and composer scripts are merged, so
   project-specific scripts survive.

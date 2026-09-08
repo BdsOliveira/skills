@@ -63,6 +63,24 @@
                 "debugbar not installed in the project",
                 "sail installed in the project"
             ]
+        },
+        {
+            "id": 3,
+            "name": "deploy-only",
+            "prompt": "esse projeto aqui já tá configurado, só falta o deploy. adiciona o workflow do github actions pra mandar pra hospedagem compartilhada — no servidor a aplicação fica em app/projetos/loja.",
+            "expected_output": ".github/workflows/deploy.yml written with server-dir and the ssh 'cd' both pointing at app/projetos/loja/, no placeholders left, and nothing else in the project changed (no phpstan.neon/pint.json rewrite, no packages installed). The user is told which GitHub variables and secret to configure.",
+            "files": [
+                "meu-projeto/"
+            ],
+            "assertions": [
+                ".github/workflows/deploy.yml exists in the project",
+                "the FTP action's server-dir is app/projetos/loja/",
+                "the ssh-action script cds into app/projetos/loja/",
+                "no __PLACEHOLDER__ tokens remain in the workflow",
+                "the workflow is valid YAML with a single job triggered on push to main",
+                "only the deploy step ran — no dev packages were installed and no other config file was rewritten",
+                "the answer names the required repo variables (FTP_HOST, FTP_USER) and secret (FTP_PASSWORD)"
+            ]
         }
     ]
 }

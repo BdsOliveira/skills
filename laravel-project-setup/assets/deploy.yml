@@ -1,0 +1,130 @@
+# Deploy to shared hosting (cPanel-style: FTP sync + SSH post-deploy).
+#
+# Written by the laravel-project-setup skill. The placeholders below are filled
+# in when the file is installed — edit assets/deploy.yml in the skill to change
+# the pipeline for every project, or this file to change it for this one.
+#
+# Repository configuration this workflow expects:
+#   vars.FTP_HOST      hostname of the FTP/SFTP server
+#   vars.FTP_USER      username used for both FTP and SSH
+#   secrets.FTP_PASSWORD  password used for both FTP and SSH
+#   vars.SSH_HOST      optional — defaults to vars.FTP_HOST
+#   vars.SSH_PORT      optional — defaults to 22
+name: Deploy App
+
+on:
+  push:
+    branches:
+      - __BRANCH__
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: __PHP_VERSION__
+          tools: composer:v2
+          coverage: xdebug
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '__NODE_VERSION__'
+
+      - name: Install Node Dependencies
+        run: npm install
+
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Directory Permissions
+        run: chmod -R 777 storage bootstrap/cache
+
+      - name: Create Database
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+
+      - name: Generate Application Key
+        run: php artisan key:generate
+
+      - name: Build Assets
+        run: npm run build
+
+      - name: Run Static Analysis
+        run: composer stan
+
+      - name: Run Pint
+        run: composer pint
+
+      - name: Check coverage
+        run: composer coverage
+
+      - name: 📂 Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ vars.FTP_HOST }}
+          username: ${{ vars.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: __REMOTE_PATH__
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            vendor/**
+            **/.claude/**
+            **/.specify/**
+            **/specs/**
+            **/tests/**
+            **/storage/debugbar/**
+            **/storage/logs/**
+            **/storage/framework/cache/**
+            **/storage/framework/sessions/**
+            **/storage/framework/views/**
+            **/storage/framework/testing/**
+            **/bootstrap/cache/*.php
+            **/database/*.sqlite
+            **/database/*.sqlite-journal
+            *.sh
+            compose.yaml
+            compose.yml
+            docker-compose*.yml
+            .env
+            .env.*
+            .vscode*
+            .editorconfig
+            .DS_Store
+            phpunit.xml
+            pint.json
+            *.log
+            .mcp.json
+            .npmrc
+            boost.json
+
+      - name: Executing remote ssh commands using password
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SSH_HOST || vars.FTP_HOST }}
+          username: ${{ vars.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ vars.SSH_PORT || 22 }}
+          script: |
+            set -e
+            PHP=__REMOTE_PHP__
+            cd __REMOTE_PATH__
+            mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs storage/app/public
+            chmod -R 775 storage bootstrap/cache
+            rm -f bootstrap/cache/*.php
+            $PHP __REMOTE_COMPOSER__ install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+            $PHP artisan optimize:clear
+            $PHP artisan migrate --force
+            $PHP artisan optimize
+            $PHP artisan queue:restart

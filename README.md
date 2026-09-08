@@ -80,7 +80,8 @@ que já existe e está diferente vira `.bak` antes de ser trocada, e os scripts 
 
 | Quero… | Mexo em… |
 | --- | --- |
-| Trocar nível do PHPStan, regra do Pint, threshold de coverage | o arquivo correspondente em `assets/` |
+| Trocar nível do PHPStan, regra do Pint, um script do composer | o arquivo correspondente em `assets/` |
+| Trocar o mínimo de cobertura (padrão 90) | `COVERAGE_MIN=<n> laravel-project-setup/setup.sh` |
 | Adicionar/remover um pacote de dev | `assets/dev-packages.txt`, uma linha por pacote |
 | Trocar os containers do Sail | `assets/sail-services.txt`, um serviço por linha |
 | Adicionar um passo novo | copiar `modules/TEMPLATE.sh.example` para `modules/NN-nome.sh` |
@@ -89,6 +90,12 @@ que já existe e está diferente vira `.bak` antes de ser trocada, e os scripts 
 
 Requisitos: PHP e Composer. O passo `--new` usa o instalador `laravel` quando
 existe e cai para `composer create-project` quando não.
+
+`composer coverage` precisa de pcov ou xdebug no PHP que roda os testes. Se
+aparecer `WARN Failed to set "pcov.enabled=1"`, a extensão não está lá — no Sail
+é imagem velha: `vendor/bin/sail build --no-cache`. E num projeto recém-criado,
+sem suíte, o `--min=90` reprova por definição: use `COVERAGE_MIN=0` no setup e
+suba o número quando existirem testes.
 
 ---
 

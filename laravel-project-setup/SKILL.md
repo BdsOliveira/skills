@@ -79,7 +79,8 @@ in — don't run the setup and offer to add Portuguese afterwards.
 ## The deploy step needs a path
 
 The `deploy` step writes `.github/workflows/deploy.yml`: on a push to the deploy
-branch GitHub Actions builds the app, runs `composer stan` / `pint` / `coverage`,
+branch GitHub Actions builds the app, runs `composer stan` / `pint` / `coverage`
+(the runner installs xdebug so the coverage gate has a driver),
 syncs the tree to a shared host over FTP and then finishes over SSH (`composer
 install --no-dev`, `migrate --force`, `optimize`, `queue:restart`).
 
@@ -118,7 +119,7 @@ Then tell the user to configure the repository: variables `FTP_HOST`, `FTP_USER`
 | 30 | `pint` | on | Writes `pint.json` from `assets/pint.json` |
 | 35 | `pest` | on | Installs Pest and initialises `tests/Pest.php` |
 | 36 | `pest-drift` | asks | Rewrites existing PHPUnit test classes into Pest syntax |
-| 40 | `composer-scripts` | on | Merges `assets/composer-scripts.json` into `composer.json` |
+| 40 | `composer-scripts` | on | Merges `assets/composer-scripts.json` into `composer.json` (`COVERAGE_MIN`, default 90) |
 | 50 | `ptbr` | asks | pt_BR translations + `APP_LOCALE` / `APP_FAKER_LOCALE` = `pt_BR` |
 | 60 | `boost` | on | Publishes Laravel Boost guidelines, skills and MCP config |
 | 70 | `sail` | on | Installs Sail and writes the Compose file from `assets/sail-services.txt` |
@@ -142,11 +143,25 @@ the modules directory is the real source of truth.
 - **`phpstan.neon` is the only place the level is set.** The `stan` composer
   script deliberately passes no `--level`, so editing `assets/phpstan.neon`
   actually changes how strict the analysis is.
-- **Coverage needs a driver, not just Pest.** The scripts ask for a 90% minimum,
-  which requires pcov or xdebug in whichever PHP runs them. Sail's image ships
-  pcov; a bare host PHP frequently has neither, and Pest's own error ("No code
-  coverage driver is available") does not say which PHP it means — so the `pest`
-  step checks and warns up front.
+- **Coverage needs a driver, not just Pest.** `composer coverage` runs
+  `XDEBUG_MODE=coverage vendor/bin/pest --coverage`, which needs pcov or xdebug
+  in whichever PHP runs it — with pcov present php-code-coverage picks pcov and
+  ignores the variable, without it xdebug takes over. Both scripts start with a
+  `coverage-driver` check that fails with a readable message when neither is
+  loaded, because the failure it replaces was a silent one: no driver means 0%
+  measured, and the run died on `--min` instead of on the missing extension. The
+  `pest` step warns about the same thing at setup time.
+- **`WARN Failed to set "pcov.enabled=1"` means the extension is missing.** It
+  is what the old `-d pcov.enabled=1` printed, and the fix is a driver in that
+  PHP, never another Composer package. Sail's image ships pcov, so an image
+  built before that was true is the usual culprit: `vendor/bin/sail build
+  --no-cache`, then `vendor/bin/sail up -d`.
+- **The coverage threshold is a per-project number.** The scripts are written
+  with `--min=90`, the house standard; pass `COVERAGE_MIN=<n>` to the setup to
+  bake in a different one. A freshly scaffolded app has `app/` code and no tests
+  covering it, so 90 fails there by definition — either scaffold with
+  `COVERAGE_MIN=0` and raise it once the suite exists, or tell the user
+  `composer coverage` is a gate for later, not a smoke test for a new app.
 - **pt_BR translations are vendored, not depended on.** The localization package
   is installed, published into `lang/`, then removed.
 - **Pest is the test runner, and new apps are created with it.** `--new` passes
@@ -193,8 +208,16 @@ the modules directory is the real source of truth.
 This is the part to reach for when the user says "add X to my setup" or
 "I don't want Y anymore" — edit the skill, don't hand-edit the output.
 
-**Change a config value** (a PHPStan level, a Pint rule, a coverage threshold,
-a composer script): edit the matching file in `assets/`. No shell code involved.
+**Change a config value** (a PHPStan level, a Pint rule, a composer script):
+edit the matching file in `assets/`. No shell code involved. The one value that
+is per-project rather than house policy is the coverage minimum — it is the
+`__COVERAGE_MIN__` placeholder in `assets/composer-scripts.json`, filled in by
+`modules/40-composer-scripts.sh` from `COVERAGE_MIN` (default 90):
+
+```bash
+COVERAGE_MIN=0 <skill>/setup.sh --new minha-app     # fresh app, no suite yet
+COVERAGE_MIN=75 <skill>/setup.sh                    # project with its own bar
+```
 
 **Add or remove a dev package**: edit `assets/dev-packages.txt`, one package per
 line. Sail's containers are the same idea in `assets/sail-services.txt`.

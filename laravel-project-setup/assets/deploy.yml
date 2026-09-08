@@ -29,6 +29,9 @@ jobs:
         with:
           php-version: __PHP_VERSION__
           tools: composer:v2
+          # `composer coverage` refuses to run without pcov or xdebug, so this
+          # must stay a real driver: with coverage: none the quality gate below
+          # fails on every push.
           coverage: xdebug
 
       - name: Setup Node
@@ -65,6 +68,9 @@ jobs:
       - name: Run Pint
         run: composer pint
 
+      # Enforces the --min the setup baked into composer.json (COVERAGE_MIN,
+      # 90 by default). A project without a suite yet fails here — lower the
+      # threshold in composer.json, or drop this step until there are tests.
       - name: Check coverage
         run: composer coverage
 

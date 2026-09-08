@@ -5,13 +5,18 @@
     "pint": [
         "vendor/bin/pint --config=pint.json --verbose"
     ],
+    "coverage-driver": [
+        "@php -r \"if (!extension_loaded('pcov') && !extension_loaded('xdebug')) { fwrite(STDERR, PHP_EOL . 'no coverage driver available: install pcov or xdebug in the PHP that runs the tests.' . PHP_EOL . 'With Sail, the image ships pcov -- rebuild it: vendor/bin/sail build --no-cache' . PHP_EOL . PHP_EOL); exit(1); }\""
+    ],
     "coverage": [
         "Composer\\Config::disableProcessTimeout",
-        "XDEBUG_MODE=off vendor/bin/pest -d pcov.enabled=1 --coverage --min=90"
+        "@coverage-driver",
+        "XDEBUG_MODE=coverage vendor/bin/pest --coverage --min=__COVERAGE_MIN__"
     ],
     "coverage-html": [
         "Composer\\Config::disableProcessTimeout",
-        "XDEBUG_MODE=off vendor/bin/pest -d pcov.enabled=1 --coverage --min=90 --coverage-html=storage/coverage"
+        "@coverage-driver",
+        "XDEBUG_MODE=coverage vendor/bin/pest --coverage --min=__COVERAGE_MIN__ --coverage-html=storage/coverage"
     ],
     "quality": [
         "@composer pint",

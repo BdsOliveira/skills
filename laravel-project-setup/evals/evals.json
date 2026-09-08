@@ -16,7 +16,9 @@
                 "Laravel's pre-existing composer scripts survived the merge",
                 "laravel/framework still installed (project not broken)",
                 "composer stan runs clean on the configured project",
-                "pt_BR was NOT applied (user asked for English / did not ask for it)"
+                "pt_BR was NOT applied (user asked for English / did not ask for it)",
+                "the coverage scripts run pest with XDEBUG_MODE=coverage and no -d pcov.enabled=1",
+                "the coverage scripts check for a coverage driver (@coverage-driver) before running pest"
             ]
         },
         {
@@ -36,7 +38,9 @@
                 "APP_LOCALE=pt_BR set in .env",
                 "APP_LOCALE=pt_BR set in .env.example",
                 "pt_BR translations published under lang/",
-                "localization package removed from composer.json after publishing"
+                "localization package removed from composer.json after publishing",
+                "the coverage scripts run pest with XDEBUG_MODE=coverage and no -d pcov.enabled=1",
+                "the coverage scripts check for a coverage driver (@coverage-driver) before running pest"
             ]
         },
         {
@@ -61,7 +65,9 @@
                 "the new module declares the name/desc headers the runner reads",
                 "pest installed in the project",
                 "debugbar not installed in the project",
-                "sail installed in the project"
+                "sail installed in the project",
+                "the coverage scripts run pest with XDEBUG_MODE=coverage and no -d pcov.enabled=1",
+                "the coverage scripts check for a coverage driver (@coverage-driver) before running pest"
             ]
         },
         {
@@ -80,6 +86,39 @@
                 "the workflow is valid YAML with a single job triggered on push to main",
                 "only the deploy step ran — no dev packages were installed and no other config file was rewritten",
                 "the answer names the required repo variables (FTP_HOST, FTP_USER) and secret (FTP_PASSWORD)"
+            ]
+        },
+        {
+            "id": 4,
+            "name": "coverage-no-driver",
+            "prompt": "rodei `composer coverage` no projeto em ./meu-projeto e ele sai com erro mesmo com todos os testes passando. aparece um WARN Failed to set \"pcov.enabled=1\" antes. o que tá acontecendo?",
+            "expected_output": "The diagnosis is the missing coverage driver: without pcov or xdebug nothing measures coverage, so the run dies on --min. The fix is a driver in the PHP that runs the tests (on Sail, a stale image rebuilt with `sail build --no-cache`), never another Composer package. If the scripts in the project still carry the old `XDEBUG_MODE=off ... -d pcov.enabled=1` form, they are fixed by re-running the skill's composer-scripts step rather than by hand-editing composer.json.",
+            "files": [
+                "meu-projeto/"
+            ],
+            "assertions": [
+                "the answer names the missing coverage driver (pcov/xdebug) as the cause, not the tests and not the --min value itself",
+                "the answer does not propose installing a Composer package to fix it",
+                "a Sail rebuild (sail build --no-cache) is named as the fix when the project runs on Sail",
+                "if composer.json was changed, the coverage scripts came from the skill (XDEBUG_MODE=coverage, @coverage-driver guard, no -d pcov.enabled=1)",
+                "the project's tests still pass afterwards"
+            ]
+        },
+        {
+            "id": 5,
+            "name": "fresh-app-coverage-threshold",
+            "prompt": "cria um projeto laravel novo chamado loja com o setup padrão. é em inglês. e deixa o `composer coverage` passando de primeira, ainda não tenho testes escritos.",
+            "expected_output": "The app is scaffolded with the full toolchain and the coverage threshold is set through the skill (COVERAGE_MIN=0, or another value the user can raise later) instead of hand-editing composer.json — so `composer coverage` passes on a project whose suite is still just the example tests. The user is told to raise the number once there is a suite.",
+            "files": [],
+            "assertions": [
+                "project directory named \"loja\" was created",
+                "composer scripts stan/pint/coverage/coverage-html/quality all present",
+                "the coverage scripts run pest with XDEBUG_MODE=coverage and no -d pcov.enabled=1",
+                "the coverage scripts check for a coverage driver (@coverage-driver) before running pest",
+                "the --min in the coverage scripts is a value the fresh project can actually meet",
+                "the threshold was set via the skill (COVERAGE_MIN), not by hand-editing composer.json after the run",
+                "the answer tells the user to raise the threshold once a suite exists",
+                "pt_BR was NOT applied (user asked for English)"
             ]
         }
     ]

@@ -41,10 +41,14 @@ else
     run $PHP_CMD vendor/bin/pest --init < /dev/null
 fi
 
-# The coverage scripts ask for a 90% minimum, which needs a coverage driver in
-# the PHP that runs them. Sail's image ships pcov; a bare host PHP often has
-# neither, and the failure message ("No code coverage driver is available")
-# gives no hint about which PHP is missing it.
+# The coverage scripts need a coverage driver in the PHP that runs them: pcov
+# or xdebug. Sail's image ships pcov, but an image built before that was true is
+# still around on plenty of machines, so "Sail is up" is not the same as "there
+# is a driver" — check the PHP that will actually run the tests.
+#
+# `composer coverage` refuses to run without one and says so; this warns at
+# setup time instead of at the first test run.
 if [[ ${DRY_RUN:-0} != 1 ]] && ! $PHP_CMD -m 2>/dev/null | grep -qiE '^(pcov|xdebug)$'; then
-    warn "no pcov/xdebug in this PHP — 'composer coverage' cannot measure coverage until one is installed (Sail's image ships pcov)"
+    warn "no pcov/xdebug in this PHP — 'composer coverage' cannot measure coverage until one is installed"
+    warn "on Sail, that usually means a stale image: vendor/bin/sail build --no-cache"
 fi

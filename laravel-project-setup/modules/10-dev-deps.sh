@@ -14,5 +14,10 @@ done < "$(asset dev-packages.txt)"
 
 [[ ${#PACKAGES[@]} -gt 0 ]] || { warn "assets/dev-packages.txt is empty — nothing to install"; return 0 2>/dev/null || exit 0; }
 
+# -W (--with-all-dependencies) lets Composer move packages the lock already
+# pins in order to satisfy the new ones. Without it, `require` is a partial
+# update and adding a tool to the list above can fail with an unresolvable
+# conflict against the skeleton's own pins — which turns "edit one line in
+# dev-packages.txt" into a debugging session.
 info "installing: ${PACKAGES[*]}"
-run $COMPOSER_CMD require --dev --no-interaction "${PACKAGES[@]}"
+run $COMPOSER_CMD require --dev -W --no-interaction "${PACKAGES[@]}"
